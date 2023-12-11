@@ -1,3 +1,5 @@
+#!/bin/bash
+
 mostrar_menu_principal() {
     clear
     echo "======== Menú de Automatización ========"
@@ -41,23 +43,22 @@ mostrar_menu_ordenar_carpetas() {
 }
 
 actualizar_sistema() {
-    sudo yum update -y
+    yum update -y
 }
 
 configurar_cronjob_descargar_archivos() {
-    usuario=$(whoami)
     read -p "Ingrese la URL del archivo a descargar: " url_archivo
     read -p "Ingrese la ruta local para guardar el archivo: " ruta_local
 
     # Agrega aquí la configuración del cronjob para descargar archivos desde la web
     # Utilizando el comando wget para descargar el archivo
-    echo "0 3 * * * $usuario wget -O $ruta_local $url_archivo" | crontab -
+    echo "0 3 * * * usuario wget -O $ruta_local $url_archivo" | crontab
 }
 
 monitorear_recursos() {
     # Agrega aquí comandos para monitorear recursos (uso de CPU, memoria, almacenamiento)
-    # Por ejemplo, para mostrar el uso de CPU y memoria:
-    top
+    # Por ejemplo, para mostrar el uso de CPU y memoria usando ps:
+    ps aux --sort=-%cpu,%mem | head -n 10
 }
 
 configurar_alertas() {
