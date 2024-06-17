@@ -56,12 +56,20 @@ configurar_cronjob_descargar_archivos() {
 }
 
 monitorear_recursos() {
-    echo "Monitoreando uso de CPU, memoria y almacenamiento:"
-    echo "Uso de CPU y memoria:"
-    ps aux --sort=-%cpu,%mem | head -n 10
+    echo "========== Estado del Equipo =========="
     echo ""
-    echo "Uso de almacenamiento:"
-    df -h
+
+    echo "Uso de CPU:"
+    mpstat | grep 'all' | awk '{print "Uso de CPU: " 100 - $12"%"}'
+    echo ""
+
+    echo "Uso de Memoria:"
+    free -m | awk 'NR==2{printf "Memoria Usada: %sMB (%.2f%%)\nMemoria Libre: %sMB (%.2f%%)\n", $3, $3*100/$2, $4, $4*100/$2}'
+    echo ""
+
+    echo "Uso de Almacenamiento:"
+    df -h | awk '$NF=="/"{printf "Espacio Usado: %d/%dGB (%s)\n", $3,$2,$5}'
+    echo ""
 }
 
 configurar_alertas() {
@@ -104,6 +112,7 @@ while true; do
             ;;
         3)
             monitorear_recursos
+            read -p "Presione Enter para continuar..."
             ;;
         4)
             configurar_alertas
