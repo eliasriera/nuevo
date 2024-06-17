@@ -15,7 +15,7 @@ mostrar_menu_principal() {
 mostrar_menu_ordenar_carpetas() {
     echo "Seleccione el criterio de ordenación:"
     echo "1. Orden alfabético"
-    echo "2. Fecha de creación"
+    echo "2. Fecha de modificación"
     echo "3. Cantidad de almacenamiento"
     echo "4. Volver al menú principal"
     read -p "Ingrese su elección: " opcion
@@ -26,8 +26,8 @@ mostrar_menu_ordenar_carpetas() {
             ls -l | grep "^d" | awk '{print $9}' | sort
             ;;
         2)
-            echo "Ordenando carpetas por fecha de creación:"
-            ls -lt --time=creation | grep "^d" | awk '{print $9}'
+            echo "Ordenando carpetas por fecha de modificación:"
+            ls -lt | grep "^d" | awk '{print $9}'
             ;;
         3)
             echo "Ordenando carpetas por cantidad de almacenamiento:"
@@ -43,7 +43,7 @@ mostrar_menu_ordenar_carpetas() {
 }
 
 actualizar_sistema() {
-    yum update -y
+    sudo yum update -y
 }
 
 configurar_cronjob_descargar_archivos() {
@@ -52,39 +52,42 @@ configurar_cronjob_descargar_archivos() {
 
     # Agrega aquí la configuración del cronjob para descargar archivos desde la web
     # Utilizando el comando wget para descargar el archivo
-    echo "0 3 * * * usuario wget -O $ruta_local $url_archivo" | crontab
+    (crontab -l 2>/dev/null; echo "0 3 * * * wget -O $ruta_local $url_archivo") | crontab -
 }
 
 monitorear_recursos() {
-    # Agrega aquí comandos para monitorear recursos (uso de CPU, memoria, almacenamiento)
-    # Por ejemplo, para mostrar el uso de CPU y memoria usando ps:
+    echo "Monitoreando uso de CPU, memoria y almacenamiento:"
+    echo "Uso de CPU y memoria:"
     ps aux --sort=-%cpu,%mem | head -n 10
+    echo ""
+    echo "Uso de almacenamiento:"
+    df -h
 }
 
 configurar_alertas() {
     read -p "Ingrese el umbral para la alerta de memoria (en MB): " umbral_memoria
-    read -p "Ingrese el umbral para la alerta de almacenamiento (en MB): " umbral_almacenamiento
+    read -p "Ingrese el umbral para la alerta de almacenamiento (en %): " umbral_almacenamiento
 
     # Agrega aquí la configuración de alertas según los umbrales proporcionados
     # Por ejemplo, utilizando un script que verifica y alerta si los recursos superan el umbral:
-    cat <<'EOF' > script-verificar-recursos.sh
+    cat <<EOF > script-verificar-recursos.sh
 #!/bin/bash
 
-umbral_memoria=$1
-umbral_almacenamiento=$2
+umbral_memoria=$umbral_memoria
+umbral_almacenamiento=$umbral_almacenamiento
 
-uso_memoria=$(free -m | awk 'NR==2{printf "%.2f", $3*100/$2}')
-if (( $(echo "$uso_memoria > $umbral_memoria" | bc -l) )); then
+uso_memoria=\$(free -m | awk 'NR==2{printf "%.2f", \$3*100/\$2}')
+if (( \$(echo "\$uso_memoria > $umbral_memoria" | bc -l) )); then
     echo "Alerta: Uso de memoria supera el umbral establecido ($umbral_memoria MB)."
 fi
 
-uso_almacenamiento=$(df -h / | awk 'NR==2{print $5}' | cut -d'%' -f1)
-if (( $uso_almacenamiento > $umbral_almacenamiento )); then
+uso_almacenamiento=\$(df -h / | awk 'NR==2{print \$5}' | cut -d'%' -f1)
+if (( \$uso_almacenamiento > $umbral_almacenamiento )); then
     echo "Alerta: Uso de almacenamiento supera el umbral establecido ($umbral_almacenamiento%)."
 fi
 EOF
 
-chmod +x script-verificar-recursos.sh  # Dar permisos de ejecución al script
+    chmod +x script-verificar-recursos.sh  # Dar permisos de ejecución al script
 }
 
 while true; do
@@ -123,4 +126,3 @@ while true; do
             ;;
     esac
 done
-
