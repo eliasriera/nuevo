@@ -34,7 +34,7 @@ mostrar_menu_ordenar_carpetas() {
             du -h --max-depth=1 | sort -h
             ;;
         4)
-            return  # Volver al menú principal sin realizar ninguna acción adicional
+            return 1  # Indica que el usuario desea volver al menú principal
             ;;
         *)
             echo "Opción no válida. No se realizará ninguna acción."
@@ -108,6 +108,9 @@ while true; do
         5)
             while true; do
                 mostrar_menu_ordenar_carpetas
+                if [ $? -eq 1 ]; then
+                    break  # Sal del bucle de ordenar carpetas para volver al menú principal
+                fi
                 read -p "Presione Enter para continuar..."
             done
             ;;
@@ -120,3 +123,4 @@ while true; do
             ;;
     esac
 done
+
